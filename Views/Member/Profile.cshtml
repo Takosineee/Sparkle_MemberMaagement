@@ -1,0 +1,91 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+@model Gym.Models.CMemberInfo
+<h1>個人資料</h1>
+
+<form id="editForm">
+    <input value="@Model.mId" name="mId" type="hidden">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">姓名</span>
+                    <input value=@Model.mName name="mName" type="text" class="form-control" placeholder="姓名" aria-label="Username" aria-describedby="basic-addon1">
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="input-group mb-3 ms-3">
+                    <span class="input-group-text" id="basic-addon1">電話</span>
+                    <input value=@Model.mPhone name="mPhone" type="text" class="form-control" placeholder="電話" aria-label="Username" aria-describedby="basic-addon1">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">生日</span>
+                    <input value=@Model.mBirth name="mBirth" type="date" class="form-control" placeholder="生日" aria-label="Username" aria-describedby="basic-addon1">
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="input-group mb-3 ms-3 align-items-center">
+                    <label class="input-group-text">性別</label>
+                    <div class="d-flex justify-content-between w-75">
+                        <div class="align-self-center">
+
+                            <input type="radio" value="1" name="mSex" @(Model.mSex == 1 ? "checked" : "")>男
+                        </div>
+                        <div class="align-self-center">
+                            <input type="radio" value="2" name="mSex" @(Model.mSex == 2 ? "checked" : "")>女
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">緊急聯絡人</span>
+                    <input value=@Model.mContactName name="mContactName" type="text" class="form-control" placeholder="姓名" aria-label="Username" aria-describedby="basic-addon1">
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="input-group mb-3 ms-3">
+                    <span class="input-group-text" id="basic-addon1">聯絡人電話</span>
+                    <input value=@Model.mContactPhone name="mContactPhone" type="text" class="form-control" placeholder="電話" aria-label="Username" aria-describedby="basic-addon1">
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">送出修改</button>
+    </div>
+</form>
+
+@section Scripts{
+    <script>
+        $('#editForm').on('submit', function (event) {
+            event.preventDefault();
+
+            $.ajax({
+                url: '@Url.Action("EditProfile", "Member")',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                    }
+                    else {
+                        alert(response.message);
+                        location.reload();
+                    }
+                },
+                error: function (error) {
+                    
+                }
+            });
+        });
+    </script>
+}
+

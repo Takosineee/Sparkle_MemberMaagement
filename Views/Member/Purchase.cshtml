@@ -1,0 +1,103 @@
+﻿@model IEnumerable<Gym.Models.CClassPriceList>
+@{
+    ViewData["Title"] = "Purchase";
+}
+
+
+<h1>課程訂購</h1>
+
+<!-- cart + summary -->
+<section>
+    <form asp-action="Checkout" method="post" id="formOrder">
+        <div class="container">
+            <div class="row">
+                <!-- cart -->
+                <div class="col-lg-9 order-1 order-sm-1 order-md-1 order-xs-1">
+                    <div class="card border shadow-0">
+                        @{
+                            foreach (var c in Model)
+                            {
+                                if (c.cDueDay != 1)
+                                {
+                                    <div class="d-flex justify-content-around align-items-center">
+                                        <div class="d-block">
+                                            <p>@c.cCourseName</p>
+                                            <p>@c.cClassCount 堂</p>
+                                        </div>
+                                        <div class="d-block">
+                                            <p>單堂訂價</p>
+                                            <p>$@c.cPerClassPrice</p>
+                                        </div>
+                                        <input name="@{
+                                    @c.cClassCount
+}-classes" value="@c.cId" class="form-check-input flexCheckDefault" type="checkbox" data-class-price="@c.cCoursePrice" data-class-count="@c.cClassCount">
+                                    </div>
+                                    
+                                }
+                            }
+                        }
+                    </div>
+                </div>
+                <!-- cart -->
+                <!-- summary -->
+                <div class="col-lg-3 order-2 order-sm-2 order-md-2 order-xs-2">
+                    <div class="card shadow-0 border">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <p class="mb-2">總價:</p>
+                                <p id="totalPrice" class="mb-2"></p>
+                            </div>
+                            <hr />
+                            <div class="mt-3">
+                                <button id="checkOut" type="submit" asp-controller="Member" asp-action="Checkout" class="btn btn-success w-100 shadow-0 mb-2"> 前往結帳 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</section>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            var checkBoxes = $('.flexCheckDefault');
+            var total = $('#totalPrice');
+            var checkOutBtn = $('#checkOut').prop('disabled', true);
+            var formOrder = $('#formOrder');
+
+            var totalClassCount = 0;
+            var totalPrice = 0;
+            total.text(`$ ${totalPrice}`);
+
+            var loadingIcon = $(`<i class="fa-solid fa-spinner fa-spin-pulse" style="color: #ffffff;"></i>`);
+
+            checkBoxes.change(function () {
+                var subTotalPrice = parseInt($(this).data("class-price"));
+                var subTotalClass = parseInt($(this).data("class-count"));
+
+                if (this.checked) {
+                    totalClassCount += subTotalClass;
+                    totalPrice += subTotalPrice;
+                } else {
+                    totalClassCount -= subTotalClass;
+                    totalPrice -= subTotalPrice;
+                }
+                total.text(`$ ${totalPrice}`);
+                checkOutBtn.prop('disabled', totalClassCount <= 0);
+            });
+            formOrder.on('submit', function () {
+                checkOutBtn.prop('disabled', true);
+                checkOutBtn.text("");
+                checkOutBtn.append(loadingIcon);
+            });
+            window.onbeforeunload = function () {
+                $('#formOrder').get(0).reset();
+            }
+        });
+
+
+    </script>
+}
+

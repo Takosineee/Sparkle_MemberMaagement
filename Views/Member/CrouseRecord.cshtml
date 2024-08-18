@@ -1,0 +1,192 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+
+@section Styles{
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        .input-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter {
+            background-color: white !important;
+            cursor: pointer;
+        }
+
+        #remainingClass {
+            font-weight:900;
+            font-size:30px;
+            color: forestgreen;
+        }
+    </style>
+}
+
+<h1>課程紀錄</h1>
+<h5>剩餘 <span id="remainingClass">@ViewBag.RemainingClass</span> 堂課</h5>
+<div class="container-fluid mt-4">
+    <div class="row g-3">
+        <!--start filter-->
+        <div class="col-md-3">
+            <label class="form-label label">課程狀態</label>
+            <select class="form-select filter" id="statusFilter">
+                @{
+                    <option value="" selected>所有狀態</option>
+                    @foreach (var s in @ViewBag.StatusList)
+                    {
+                        <option value="@s">@s</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label label">課程開始日期</label>
+            <div class="input-group">
+                <input type="text" class="form-control filter" value="所有日期" id="dateFilter" readonly>
+                <span class="input-group-text filter" id="calIcon">
+                    <i class="fa-regular fa-calendar" style="color: #353a40;"></i>
+                </span>
+            </div>
+        </div>
+        <div class="col-md-3 mt-auto">
+            <button type="button" class="btn btn-primary" id="btnFilter">篩選</button>
+        </div>
+    </div>
+    <hr>
+    <!--end filter-->
+    <!--start table-->
+    <div class="row g-3">
+        <table id="courseList" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>序號</th>
+                    <th>授課教練</th>
+                    <th>課程名稱</th>
+                    <th>預約課程日期</th>
+                    <th>課程開始日期</th>
+                    <th>狀態</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                </tr>
+            </tbody>
+        </table>
+        <!--end table-->
+    </div>
+</div>
+
+
+@section Scripts{
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            var dateFilter = $('#dateFilter');
+            var statusFilter = $('#statusFilter');
+            var btnFilter = $('#btnFilter');
+
+            
+            var startDate = "2000/01/01";
+            var endDate = "3000/01/01";
+
+            var table;
+            
+            dateFilter.daterangepicker({
+                autoUpdateInput: false,
+                locale: {
+                    format: 'YYYY/MM/DD',
+                    separator: ' 至 ',
+                    daysOfWeek: ['日', '一', '二', '三', '四', '五', '六'],
+                    monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
+                },
+                minDate: '2000/01/01',
+                autoApply: true
+            });
+            $('#calIcon').on('click', function () {
+                dateFilter.click();
+            })
+            
+            dateFilter.on('apply.daterangepicker', function (ev, picker) {
+                startDate = picker.startDate.format('YYYY/MM/DD');
+                endDate = picker.endDate.format('YYYY/MM/DD');
+                dateFilter.val(startDate + ' 至 ' + endDate);
+            });
+
+
+            function loadData() {
+                
+                var selectedStatus = statusFilter.val();
+                
+                $.ajax({
+                    url: "@Url.Action("getCourseRecord", "Member")",
+                    type: 'GET',
+                    data: { start: startDate, end: endDate, status: selectedStatus },
+                    success: function (response) {
+                        if ($.fn.DataTable.isDataTable('#courseList')) {
+                            table = $('#courseList').DataTable();
+                            table.clear().rows.add(response).draw();
+                        } else {
+                            table = $('#courseList').DataTable({
+                                responsive: true,
+                                lengthMenu: [[10, 25, 50], [10, 25, 50]],
+                                pageLength: 10,
+                                paging: true,
+                                searching: true,
+                                data: response,
+                                language: {
+                                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/zh-HANT.json',
+                                },
+                                columns: [
+                                    {
+                                        data: null,
+                                        render: function (data, type, full, meta) {
+                                            return meta.row + 1;
+                                        }
+                                    },
+                                    { data: "cTeacher" },
+                                    { data: "cName" },
+                                    {
+                                        data: "cBookedDate",
+                                        render: function (data, type, full, meta) {
+                                            var cellDate = data == null ? null : new Date(data);
+                                            
+                                            var formattedDate = cellDate == null ? null : cellDate.toLocaleDateString();
+                                            return formattedDate;
+                                        }
+                                    },
+                                    {
+                                        data: "cDate",
+                                        render: function (data, type, full, meta) {
+                                            var cellDate = data == null ? null : new Date(data);
+                                            var formattedDate = cellDate == null ? null : cellDate.toLocaleDateString();
+                                            console.log(cellDate.toLocaleDateString())
+
+                                            return formattedDate;
+                                        }
+                                    },
+                                    { data: "cStatus" }
+                                ]
+                            });
+                        }
+                    },
+                    error: function (error) {
+                    }
+                });
+            }
+            loadData();
+            btnFilter.on('click', function () {
+
+                loadData();
+            });
+        });
+
+
+
+    </script>
+}
